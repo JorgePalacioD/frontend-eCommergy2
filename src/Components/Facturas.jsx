@@ -10,7 +10,6 @@ const Facturas = ({ factura, onClose }) => {
   const [valoresKH, setValoresKH] = useState([]);
   const [sedes, setSedes] = useState([]);
   
-  // Estado para guardar el idusuario
   const [idusuario, setIdusuario] = useState(null);
   const [error, setError] = useState(null);
 
@@ -25,10 +24,10 @@ const Facturas = ({ factura, onClose }) => {
   const [valorFactura, setValorFactura] = useState(factura ? factura.valor_factura : '');
 
   useEffect(() => {
-    // Obtener el idusuario desde localStorage
     const storedUserId = localStorage.getItem('userId');
     if (storedUserId) {
       setIdusuario(storedUserId);
+      console.log(localStorage.getItem('userId'));
     } else {
       console.error('No se encontró el idusuario en localStorage.');
       Swal.fire('Error', 'No se encontró el usuario. Por favor, inicie sesión nuevamente.', 'error');
@@ -36,7 +35,6 @@ const Facturas = ({ factura, onClose }) => {
   }, []);
 
   useEffect(() => {
-    // Obtener operadores
     fetch('http://localhost:3001/api/operadores')
       .then(response => response.json())
       .then(data => setOperadores(data))
@@ -47,7 +45,6 @@ const Facturas = ({ factura, onClose }) => {
   }, []);
   
   useEffect(() => {
-    // Obtener sedes
     fetch('http://localhost:3001/api/sedes')
       .then(response => response.json())
       .then(data => setSedes(data))
@@ -58,86 +55,85 @@ const Facturas = ({ factura, onClose }) => {
   }, []);
   
   useEffect(() => {
-    if (operadorSeleccionado && sedeSeleccionada) {
-      // Obtener valores de kWh
-      fetch(`http://localhost:3001/api/operadores_tarifa/${operadorSeleccionado}/${sedeSeleccionada}`)
-        .then(response => {
+    const fetchTarifas = async () => {
+      if (operadorSeleccionado && sedeSeleccionada) {
+        try {
+          const response = await fetch(`http://localhost:3001/api/operadores_tarifa/${operadorSeleccionado}/${sedeSeleccionada}`);
           if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(`Error: ${response.status} - ${response.statusText}`);
           }
-          return response.json();
-        })
-        .then(data => {
-          console.log('Valores kWh:', data);
-          setValoresKH(data); // Ajusta esto según la estructura de tu respuesta esperada
-        })
-        .catch(error => {
-          console.error('Error fetching valores kWh:', error);
-          Swal.fire('Error', 'Hubo un problema al obtener los valores de kWh.', 'error');
-        });
-    }
+          const result = await response.json();
+          setValoresKH(result.data); // Ajusta esto según la estructura de tu respuesta esperada
+        } catch (error) {
+          console.error('Error fetching valores kWh:', error.message);
+          Swal.fire('Error', 'Hubo un problema al obtener los valores de kWh. Verifique la consola para más detalles.', 'error');
+        }
+      }
+    };
+    fetchTarifas();
   }, [operadorSeleccionado, sedeSeleccionada]);
-  
-  
-
-  const handleCantidadKHChange = (e) => {
-    const cantidad = e.target.value;
-    setCantidadKH(cantidad);
-  };
-
-  const handleValorKHChange = (e) => {
-    setValorKHSeleccionado(e.target.value);
-  };
 
   const handleGuardarFactura = () => {
-    if (!idusuario) {
-      Swal.fire('Error', 'No se ha encontrado el ID de usuario. Por favor, intente de nuevo.', 'error');
+    console.log('Operador Seleccionado:', operadorSeleccionado);
+    console.log('Número de Factura:', numeroFactura);
+    // Validación de campos antes de guardar
+    if (!numeroFactura || !operadorSeleccionado || !sedeSeleccionada || !anio || !mes || !cantidadKH || !valorKHSeleccionado || !valorFactura) {
+      Swal.fire('Error', 'Todos los campos son obligatorios.', 'error');
       return;
     }
 
+    if (!idusuario) {
+      Swal.fire('Error', 'No se encontró el usuario. Por favor, inicie sesión nuevamente.', 'error');
+      return;
+    }
+
+
     const data = {
-      numero_fac: numeroFactura,
-      operador: operadorSeleccionado,
-      sede: sedeSeleccionada,
-      fecha,
-      anio,
-      mes,
-      cantidadkh: cantidadKH,
-      valor_kwh: valorKHSeleccionado,
-      valor_factura: valorFactura,
-      idusuario
+      numerofac: numeroFactura,
+      idoperador: parseInt(operadorSeleccionado, 10), // Convertir a entero
+      sede: parseInt(sedeSeleccionada, 10), // Convertir a entero
+      fecha: fecha.toISOString().split('T')[0], // Formato: YYYY-MM-DD HH:MM:SS
+      anio: parseInt(anio, 10), // Convertir a entero
+      mes: parseInt(mes, 10), // Convertir a entero
+      cantidadkh: parseFloat(cantidadKH), // Convertir a float
+      valor_kwh: parseFloat(valorKHSeleccionado), // Convertir a float
+      valor_factura: parseFloat(valorFactura), // Convertir a float
+      idusuario: parseInt(idusuario, 10) // Convertir a entero
     };
 
-    fetch('http://localhost:3001/api/facturas', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-      Swal.fire('Éxito', 'Factura guardada correctamente', 'success');
-      onClose(); // Cerrar el modal o el componente
-    })
-    .catch(error => {
-      console.error('Error guardando la factura:', error);
-      Swal.fire('Error', 'Hubo un problema al guardar la factura', 'error');
-    });
+      console.log("Datos enviados:", data);
+
+      fetch('http://localhost:3001/api/facturas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        console.log("Resultado de la solicitud:", result);
+        Swal.fire('Éxito', 'Factura guardada correctamente', 'success');
+        onClose(); // Cerrar el modal o el componente
+      })
+      .catch(error => {
+        console.error('Error guardando la factura:', error);
+        Swal.fire('Error', 'Hubo un problema al guardar la factura', 'error');
+      });
   };
 
   return (
     <Box>
       <VStack spacing={4}>
         <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-          <FormControl>
+          {/* Selección de Operador */}
+          <FormControl isRequired>
             <FormLabel>Operador de Energía</FormLabel>
             <Select
               backgroundColor={'white'}
               borderColor='#525252'
               placeholder="Seleccione un operador"
-              value={operadorSeleccionado}
-              onChange={(e) => setOperadorSeleccionado(e.target.value)}
+              onChange={e => setOperadorSeleccionado(e.target.value)} value={operadorSeleccionado}
             >
               {operadores.map(operador => (
                 <option key={operador.idoperador} value={operador.idoperador}>
@@ -146,7 +142,9 @@ const Facturas = ({ factura, onClose }) => {
               ))}
             </Select>
           </FormControl>
-          <FormControl>
+          
+          {/* Selección de Sede */}
+          <FormControl isRequired>
             <FormLabel>Sede</FormLabel>
             <Select
               backgroundColor={'white'}
@@ -162,7 +160,9 @@ const Facturas = ({ factura, onClose }) => {
               ))}
             </Select>
           </FormControl>
-          <FormControl>
+          
+          {/* Número de Factura */}
+          <FormControl isRequired>
             <FormLabel>Número de Factura</FormLabel>
             <Input
               backgroundColor={'white'}
@@ -173,6 +173,8 @@ const Facturas = ({ factura, onClose }) => {
               autoComplete="off"
             />
           </FormControl>
+
+          {/* Fecha */}
           <FormControl>
             <FormLabel>Fecha</FormLabel>
             <DatePicker
@@ -181,7 +183,9 @@ const Facturas = ({ factura, onClose }) => {
               dateFormat="dd/MM/yyyy"
             />
           </FormControl>
-          <FormControl>
+          
+          {/* Año y Mes de Consumo */}
+          <FormControl isRequired>
             <FormLabel>Año de Consumo</FormLabel>
             <Input
               backgroundColor={'white'}
@@ -194,7 +198,8 @@ const Facturas = ({ factura, onClose }) => {
               max={new Date().getFullYear()}
             />
           </FormControl>
-          <FormControl>
+
+          <FormControl isRequired>
             <FormLabel>Mes de Consumo</FormLabel>
             <Select
               backgroundColor={'white'}
@@ -217,50 +222,57 @@ const Facturas = ({ factura, onClose }) => {
               <option value="12">Diciembre</option>
             </Select>
           </FormControl>
-          <FormControl>
+          
+          {/* Cantidad y Valor kWh */}
+          <FormControl isRequired>
             <FormLabel>Cantidad kWh</FormLabel>
             <Input
               backgroundColor={'white'}
               borderColor='#525252'
               type="number"
               value={cantidadKH}
-              onChange={handleCantidadKHChange}
+              onChange={(e) => setCantidadKH(e.target.value)}
               placeholder="Ingrese cantidad de kWh"
               min="0"
             />
           </FormControl>
-          <FormControl>
+
+          <FormControl isRequired>
             <FormLabel>Valor kWh</FormLabel>
             <Select
               backgroundColor={'white'}
               borderColor='#525252'
               value={valorKHSeleccionado}
-              onChange={handleValorKHChange}
-              placeholder="Seleccione un valor kWh"
+              onChange={(e) => setValorKHSeleccionado(e.target.value)}
+              placeholder="Seleccione valor kWh"
             >
               {valoresKH.map(valor => (
-                <option key={valor.idtarifa} value={valor.valor_kwh}>
-                  {valor.valor_kwh}
+                <option key={valor.idtarifa} value={valor.valorkh}>
+                  {valor.valorkh}
                 </option>
               ))}
             </Select>
           </FormControl>
-          <FormControl>
-            <FormLabel>Valor Factura</FormLabel>
+
+          {/* Valor total factura */}
+          <FormControl isRequired>
+            <FormLabel>Valor Total Factura</FormLabel>
             <Input
               backgroundColor={'white'}
               borderColor='#525252'
               type="number"
               value={valorFactura}
               onChange={(e) => setValorFactura(e.target.value)}
-              placeholder="Ingrese valor de la factura"
+              placeholder="Ingrese el valor total de la factura"
               min="0"
             />
           </FormControl>
         </Grid>
-        <Button colorScheme="teal" onClick={handleGuardarFactura}>
-          Guardar Factura
-        </Button>
+
+        <HStack justify="center" spacing={4}>
+          <Button colorScheme="green" onClick={handleGuardarFactura}>Guardar Factura</Button>
+          <Button colorScheme="red" onClick={onClose}>Cancelar</Button>
+        </HStack>
       </VStack>
     </Box>
   );

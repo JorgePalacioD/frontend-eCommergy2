@@ -16,50 +16,69 @@ import {
   TableContainer,
 } from '@chakra-ui/react'
 
-const BuscarFacturas = () => {
+const BuscarTarifas = () => {
   const [tarifasRegistradas, setTarifasRegistradas] = useState([]);
   const [filteredTarifas, setFilteredTarifas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [operadores, setOperadores] = useState([]);
+  const [sedes, setSedes] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedTarifa, setSelectedTarifa] = useState(null);
   const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
   useEffect(() => {
-    const fetchTarifas = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/tarifas');
-        const data = await response.json();
-        console.log('Datos recibidos:', data); // Verifica los datos aquí
-        if (Array.isArray(data)) {
-          const validData = data.map(item => ({
-            nombreOperador: typeof item.nombreOperador === 'string' ? item.nombreOperador : '',
-            sede: typeof item.nombreSede === 'string' ? item.nombreSede : '',
-            anio: typeof item.anio === 'number' ? item.anio : 0,
-            mes: typeof item.mes === 'number' ? item.mes : 0,
-            valorkh: typeof item.valorkh === 'number' ? item.valorkh : 0
+        const [tarifasResponse, operadoresResponse, sedesResponse] = await Promise.all([
+          fetch('http://localhost:3001/api/operadores_tarifas'),
+          fetch('http://localhost:3001/api/operadores'),
+          fetch('http://localhost:3001/api/sedes')
+        ]);
+
+        const tarifasData = await tarifasResponse.json();
+        const operadoresData = await operadoresResponse.json();
+        const sedesData = await sedesResponse.json();
+
+        if (tarifasData.success && Array.isArray(tarifasData.data)) {
+          const tarifasConNombres = tarifasData.data.map(tarifa => ({
+            ...tarifa,
+            nombreOperador: getOperadorNombre(tarifa.idoperador),
+            nombreSede: getSedeNombre(tarifa.idsede),
           }));
-          setTarifasRegistradas(validData);
-          setFilteredTarifas(validData);
+          setTarifasRegistradas(tarifasConNombres);
+          setFilteredTarifas(tarifasConNombres);
         } else {
-          console.error('Datos de tarifas no son un arreglo:', data);
+          console.error('Datos de tarifas no son un arreglo:', tarifasData);
+        }
+
+        if (Array.isArray(operadoresData)) {
+          setOperadores(operadoresData);
+        } else {
+          console.error('Datos de operadores no son un arreglo:', operadoresData);
+        }
+
+        if (Array.isArray(sedesData)) {
+          setSedes(sedesData);
+        } else {
+          console.error('Datos de sedes no son un arreglo:', sedesData);
         }
       } catch (error) {
-        console.error('Error fetching tarifas:', error);
+        console.error('Error fetching data:', error);
       }
     };
-  
-    fetchTarifas();
+
+    fetchData();
   }, []);
+
   useEffect(() => {
+    console.log("Término de búsqueda:", searchTerm);
     const filtered = tarifasRegistradas.filter(tarifa =>
-      (tarifa.nombreOperador && tarifa.nombreOperador.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (tarifa.anio && tarifa.anio.toString().includes(searchTerm)) ||
-      (tarifa.mes && tarifa.mes.toString().includes(searchTerm)) ||
-      (tarifa.sede && tarifa.sede.toLowerCase().includes(searchTerm)) ||
-      (tarifa.valorkh && tarifa.valorkh.toString().includes(searchTerm))
+      tarifa.nombreOperador && tarifa.nombreOperador.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    console.log("Tarifas filtradas:", filtered);
     setFilteredTarifas(filtered);
   }, [searchTerm, tarifasRegistradas]);
+  
 
   const handleEdit = (tarifa) => {
     setSelectedTarifa(tarifa);
@@ -70,12 +89,12 @@ const BuscarFacturas = () => {
     const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar esta tarifa?");
     if (confirmDelete) {
       try {
-        const response = await fetch(`http://localhost:3001/api/tarifas/${tarifa.id}`, {
+        const response = await fetch(`http://localhost:3001/api/operadores_tarifas/${tarifa.idtarifa}`, {
           method: 'DELETE',
         });
         if (response.ok) {
           Swal.fire('Eliminado!', 'La tarifa ha sido eliminada.', 'success');
-          setTarifasRegistradas(tarifasRegistradas.filter(t => t.id !== tarifa.id));
+          setTarifasRegistradas(tarifasRegistradas.filter(t => t.idtarifa !== tarifa.idtarifa));
         } else {
           Swal.fire('Error', 'No se pudo eliminar la tarifa.', 'error');
         }
@@ -85,7 +104,15 @@ const BuscarFacturas = () => {
     }
   };
 
-  
+  const getOperadorNombre = (idoperador) => {
+    const operador = operadores.find(op => op.idoperador === idoperador);
+    return operador ? operador.nombre : 'Desconocido';
+  };
+
+  const getSedeNombre = (idsede) => {
+    const sede = sedes.find(sd => sd.idsede === idsede);
+    return sede ? sede.nombre : 'Desconocido';
+  };
 
   return (
     <Box fontFamily={''}>
@@ -105,14 +132,14 @@ const BuscarFacturas = () => {
       </VStack>
       <Box p={5} backgroundColor="#98fe58" h="36.1rem">
         <Box display="flex" justifyContent="space-between" mb={4}>
-          <Input 
+          <Input
             backgroundColor={'white'}
             borderColor='#525252'
-            placeholder="Buscar tarifas registradas..."
+            placeholder="Buscar por nombre del operador..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <Button marginLeft={'1rem'} color={'white'} backgroundColor='#007832' _hover={{backgroundColor:'#02652d'}} _active={{ backgroundColor: '#003916' }}  onClick={() => { setSelectedTarifa(null); onOpen(); }}>Nuevo</Button>
+          <Button marginLeft={'1rem'} color={'white'} backgroundColor='#007832' _hover={{backgroundColor:'#02652d'}} _active={{ backgroundColor: '#003916' }} onClick={() => { setSelectedTarifa(null); onOpen(); }}>Nuevo</Button>
         </Box>
         <TableContainer backgroundColor={''}>
           <Table variant='striped' colorScheme='teal'>
@@ -130,52 +157,47 @@ const BuscarFacturas = () => {
               {filteredTarifas.length > 0 ? (
                 filteredTarifas.map((tarifa, index) => (
                   <Tr key={index}>
-                    <Td>{tarifa.nombreOperador}</Td>
-                    <Td>{tarifa.sede}</Td>
+                    <Td>{getOperadorNombre(tarifa.idoperador)}</Td>
+                    <Td>{getSedeNombre(tarifa.idsede)}</Td>
                     <Td>{tarifa.anio}</Td>
                     <Td>{meses[tarifa.mes - 1]}</Td>
                     <Td isNumeric>{tarifa.valorkh}</Td>
                     <Td>
-                      <Button 
-                        size="sm" 
-                        color={'white'} 
-                        backgroundColor='#007832' 
-                        _hover={{backgroundColor:'#02652d'}} 
-                        _active={{ backgroundColor: '#003916' }} 
+                      <Button
+                        size="sm"
+                        color={'white'}
+                        backgroundColor='#007832'
+                        _hover={{backgroundColor:'#02652d'}}
+                        _active={{ backgroundColor: '#003916' }}
                         onClick={() => handleEdit(tarifa)}
                       >
                         Editar
                       </Button>
-                      <Button 
-                        size="sm" 
-                        color={'white'} 
-                        backgroundColor='#FF0000' 
-                        _hover={{backgroundColor:'#CC0000'}} 
-                        _active={{ backgroundColor: '#990000' }} 
+                      <Button
+                        size="sm"
+                        color={'white'}
+                        backgroundColor='#C8102E'
+                        _hover={{backgroundColor:'#960000'}}
+                        _active={{ backgroundColor: '#6d0000' }}
                         onClick={() => handleDelete(tarifa)}
-                        marginLeft={'1rem'}
                       >
-                        Borrar
+                        Eliminar
                       </Button>
                     </Td>
                   </Tr>
                 ))
               ) : (
                 <Tr>
-                  <Td colSpan={5} textAlign="center">No se encontraron tarifas registradas.</Td>
+                  <Td colSpan={6}>No se encontraron tarifas.</Td>
                 </Tr>
               )}
             </Tbody>
-            <Tfoot>
-              {/* Puedes agregar pie de tabla si es necesario */}
-            </Tfoot>
           </Table>
         </TableContainer>
-
-        <Modal isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false}>
+        <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>{selectedTarifa ? "Editar Tarifa" : "Nueva Tarifa"}</ModalHeader>
+            <ModalHeader>{selectedTarifa ? 'Editar Tarifa' : 'Nueva Tarifa'}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <Tarifas tarifa={selectedTarifa} onClose={onClose} />
@@ -187,4 +209,4 @@ const BuscarFacturas = () => {
   );
 };
 
-export default BuscarFacturas;
+export default BuscarTarifas;

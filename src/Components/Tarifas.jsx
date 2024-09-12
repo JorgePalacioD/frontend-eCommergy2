@@ -51,25 +51,34 @@ const Tarifas = ({ tarifa, onClose }) => {
       });
       return;
     }
-
+  
+    // Verificar los datos que se están enviando
+    console.log('Datos que se enviarán:', {
+      idoperador: operadorSeleccionado,
+      anio: anioSeleccionado,
+      mes: mesSeleccionado,
+      valorkh: valorKwh,
+      idsede: sedeSeleccionada,
+    });
+  
     try {
       const method = tarifa ? 'PUT' : 'POST';
-      const url = tarifa ? `http://localhost:3001/api/tarifas/${tarifa.id}` : 'http://localhost:3001/api/tarifas';
-
+      const url = tarifa ? `http://localhost:3001/api/operadores_tarifas/${tarifa.id}` : 'http://localhost:3001/api/operadores_tarifas';
+  
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          operador: operadorSeleccionado,
-          sede: sedeSeleccionada,
+          idoperador: operadorSeleccionado,
           anio: anioSeleccionado,
           mes: mesSeleccionado,
           valorkh: valorKwh,
+          idsede: sedeSeleccionada,
         }),
       });
-
+  
       const data = await response.json();
       if (data.success === false) {
         Swal.fire({
@@ -93,6 +102,7 @@ const Tarifas = ({ tarifa, onClose }) => {
       });
     }
   };
+  
 
   const anios = [];
   const currentYear = new Date().getFullYear();

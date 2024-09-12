@@ -21,20 +21,41 @@ const BuscarFacturas = () => {
   const [facturasRegistradas, setFacturasRegistradas] = useState([]);
   const [filteredFacturas, setFilteredFacturas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sedes, setSedes] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedFactura, setSelectedFactura] = useState(null);
   const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
   useEffect(() => {
+    const fetchSedes = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/sedes');
+        const result = await response.json();
+        console.log('Datos de sedes:', result); // Muestra el resultado completo
+
+        if (Array.isArray(result)) {
+          setSedes(result);
+        } else {
+          console.error('Datos de sedes no son un arreglo:', result);
+        }
+      } catch (error) {
+        console.error('Error fetching sedes:', error);
+      }
+    };
+
+    fetchSedes();
+  }, []);
+
+  useEffect(() => {
     const fetchFacturas = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/facturas');
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const validData = data.map(item => ({
-            numeroFactura: typeof item.numero_factura === 'string' ? item.numero_factura : '',
+        const response = await fetch('http://localhost:3001/api/facturas');
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          const validData = result.data.map(item => ({
+            numeroFactura: typeof item.numerofac === 'string' ? item.numerofac : '',
             fecha: typeof item.fecha === 'string' ? item.fecha : '',
-            sede: typeof item.sede === 'string' ? item.sede : '',
+            sede: typeof item.sede === 'number' ? item.sede : 0,
             anio: typeof item.anio === 'number' ? item.anio : 0,
             mes: typeof item.mes === 'number' ? item.mes : 0,
             cantidadKh: typeof item.cantidadkh === 'number' ? item.cantidadkh : 0,
@@ -44,7 +65,7 @@ const BuscarFacturas = () => {
           setFacturasRegistradas(validData);
           setFilteredFacturas(validData);
         } else {
-          console.error('Datos de facturas no son un arreglo:', data);
+          console.error('Datos de facturas no son un arreglo o success es falso:', result);
         }
       } catch (error) {
         console.error('Error fetching facturas:', error);
@@ -55,15 +76,19 @@ const BuscarFacturas = () => {
   }, []);
 
   useEffect(() => {
-    const filtered = facturasRegistradas.filter(factura =>
-      (factura.numeroFactura && factura.numeroFactura.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (factura.sede && factura.sede.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (factura.anio && factura.anio.toString().includes(searchTerm)) ||
-      (factura.mes && factura.mes.toString().includes(searchTerm)) ||
-      (factura.valorFactura && factura.valorFactura.toString().includes(searchTerm))
-    );
+    const filtered = facturasRegistradas.filter(factura => {
+      const sedeNombre = sedes.find(sede => sede.idsede === factura.sede)?.nombre.toLowerCase() || '';
+
+      return (
+        (factura.numeroFactura && factura.numeroFactura.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (sedeNombre && sedeNombre.includes(searchTerm.toLowerCase())) ||
+        (factura.anio && factura.anio.toString().includes(searchTerm)) ||
+        (factura.mes && factura.mes.toString().includes(searchTerm)) ||
+        (factura.valorFactura && factura.valorFactura.toString().includes(searchTerm))
+      );
+    });
     setFilteredFacturas(filtered);
-  }, [searchTerm, facturasRegistradas]);
+  }, [searchTerm, facturasRegistradas, sedes]);
 
   const handleEdit = (factura) => {
     setSelectedFactura(factura);
@@ -74,7 +99,7 @@ const BuscarFacturas = () => {
     const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar esta factura?");
     if (confirmDelete) {
       try {
-        const response = await fetch(`http://localhost:5000/api/facturas/${factura.idfactura}`, {
+        const response = await fetch(`http://localhost:3001/api/facturas/${factura.idfactura}`, {
           method: 'DELETE',
         });
         if (response.ok) {
@@ -135,8 +160,8 @@ const BuscarFacturas = () => {
                 filteredFacturas.map((factura, index) => (
                   <Tr key={index}>
                     <Td>{factura.numeroFactura}</Td>
-                    <Td>{factura.fecha}</Td>
-                    <Td>{factura.sede}</Td>
+                    <Td>{new Date(factura.fecha).toISOString().split('T')[0]}</Td>
+                    <Td>{sedes.find(sede => sede.idsede === factura.sede)?.nombre || 'Desconocida'}</Td>
                     <Td>{factura.anio}</Td>
                     <Td>{meses[factura.mes - 1]}</Td>
                     <Td isNumeric>{factura.cantidadKh}</Td>
@@ -168,25 +193,23 @@ const BuscarFacturas = () => {
                 ))
               ) : (
                 <Tr>
-                  <Td colSpan={8} textAlign="center">No se encontraron facturas registradas.</Td>
+                  <Td colSpan={8} textAlign="center">No se encontraron resultados</Td>
                 </Tr>
               )}
             </Tbody>
           </Table>
         </TableContainer>
-
-        <Modal isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false}>
+        <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
-          <ModalContent  >
-            <ModalHeader>{selectedFactura ? "Editar Factura" : "Nueva Factura"}</ModalHeader>
+          <ModalContent>
+            <ModalHeader>{selectedFactura ? 'Editar Factura' : 'Agregar Factura'}</ModalHeader>
             <ModalCloseButton />
-            <ModalBody display="flex" flexDirection="row" justifyContent="space-between" maxW="100%" 
-             width="80rem" 
-             margin="auto" 
-             padding="4" 
-             borderWidth="1px" 
-             borderRadius="md" >
-              <Facturas factura={selectedFactura} onClose={onClose} />
+            <ModalBody>
+              <Facturas
+                factura={selectedFactura}
+                onClose={onClose}
+                fetchFacturas={() => fetchFacturas()}
+              />
             </ModalBody>
           </ModalContent>
         </Modal>

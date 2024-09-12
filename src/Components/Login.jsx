@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Swal from 'sweetalert2';
 
 
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,9 +38,11 @@ export default function Login() {
       }
   
       const data = await response.json();
+      console.log('Respuesta del servidor:', data);
       if (data.success) {
         // Guardar el ID del usuario en localforage
-        localStorage.setItem('userId', data.userId);
+        localStorage.setItem('userId', data.usuario.idusuario);
+        console.log(localStorage.getItem('userId'));
   
         Swal.fire({
           icon: 'success',
