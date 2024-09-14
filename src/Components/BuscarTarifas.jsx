@@ -78,7 +78,6 @@ const BuscarTarifas = () => {
     console.log("Tarifas filtradas:", filtered);
     setFilteredTarifas(filtered);
   }, [searchTerm, tarifasRegistradas]);
-  
 
   const handleEdit = (tarifa) => {
     setSelectedTarifa(tarifa);
@@ -130,7 +129,7 @@ const BuscarTarifas = () => {
           <Img src={logoInstitucional} alt="Logo Institucional" boxSize="50px" />
         </Heading>
       </VStack>
-      <Box p={5} backgroundColor="#98fe58" h="36.1rem">
+      <Box p={5} backgroundColor="#3bb000" h="auto">
         <Box display="flex" justifyContent="space-between" mb={4}>
           <Input
             backgroundColor={'white'}
@@ -139,17 +138,19 @@ const BuscarTarifas = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <Button marginLeft={'1rem'} color={'white'} backgroundColor='#007832' _hover={{backgroundColor:'#02652d'}} _active={{ backgroundColor: '#003916' }} onClick={() => { setSelectedTarifa(null); onOpen(); }}>Nuevo</Button>
+          <Button marginLeft={'1rem'} color={'white'} backgroundColor='#007832' _hover={{ backgroundColor: '#02652d' }} _active={{ backgroundColor: '#003916' }} onClick={() => { setSelectedTarifa(null); onOpen(); }}>Nuevo</Button>
         </Box>
         <TableContainer backgroundColor={''}>
           <Table variant='striped' colorScheme='teal'>
             <Thead>
-              <Tr backgroundColor={'#3bb000'}>
+              <Tr backgroundColor={'#52db07'}>
                 <Th color={'white'}>Comercializador</Th>
                 <Th color={'white'}>Sede</Th>
                 <Th color={'white'}>Año</Th>
                 <Th color={'white'}>Mes</Th>
-                <Th color={'white'} isNumeric>Valor KwH</Th>
+                <Th color={'white'} isNumeric>
+                  Valor <Text as="span" textTransform="lowercase">kWh</Text>
+                </Th>
                 <Th color={'white'}></Th>
               </Tr>
             </Thead>
@@ -167,7 +168,7 @@ const BuscarTarifas = () => {
                         size="sm"
                         color={'white'}
                         backgroundColor='#007832'
-                        _hover={{backgroundColor:'#02652d'}}
+                        _hover={{ backgroundColor: '#02652d' }}
                         _active={{ backgroundColor: '#003916' }}
                         onClick={() => handleEdit(tarifa)}
                       >
@@ -177,7 +178,7 @@ const BuscarTarifas = () => {
                         size="sm"
                         color={'white'}
                         backgroundColor='#C8102E'
-                        _hover={{backgroundColor:'#960000'}}
+                        _hover={{ backgroundColor: '#960000' }}
                         _active={{ backgroundColor: '#6d0000' }}
                         onClick={() => handleDelete(tarifa)}
                       >

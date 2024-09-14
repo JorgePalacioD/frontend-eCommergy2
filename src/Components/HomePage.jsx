@@ -24,8 +24,9 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [showRegister, setShowRegister] = useState(false);
   const [showComercializador, setShowComercializador] = useState(false);
-  const [showFactura, setShowFactura] = useState(false);
   const [showRegisterFactura, setShowRegisterFactura] = useState(false); // Añadido
+  const [showGraficas, setShowRegisterGraficas] = useState(false);
+
 
   const handleFacturasClick = () => {
     setShowRegisterFactura(true);
@@ -49,6 +50,10 @@ export default function HomePage() {
   const handleFacturaClick = () => {
     navigate('/buscar-facturas'); // Redirige a la página de BuscarFacturas
   };
+
+  const handleAnalisisClick =() =>{
+    navigate('/analisis-costos');
+  }
 
   const handleTarifasClick = () => {
     navigate('/buscar-tarifas'); // Cambia la ruta a la página de "Buscar tarifas"
@@ -99,7 +104,6 @@ export default function HomePage() {
             <MenuItem icon={<PeopleOutlineIcon style={{ fontSize: 20 }} />} onClick={handleComercializadorClick}>
               Comercializador de energía
             </MenuItem>
-            <MenuItem icon={<ManageSearchOutlinedIcon style={{ fontSize: 20 }} />}>Sedes del centro</MenuItem>
             <MenuItem icon={<AppRegistrationOutlinedIcon style={{ fontSize: 20 }} />} onClick={handleRegisterClick}>
               Registro de usuarios
             </MenuItem>
@@ -107,7 +111,7 @@ export default function HomePage() {
               Tarifas por comercializador
             </MenuItem>
             <MenuItem icon={<AddchartOutlinedIcon style={{ fontSize: 20 }} />} onClick={handleFacturaClick}>Registro de facturas</MenuItem>
-            <MenuItem icon={<AnalyticsOutlinedIcon style={{ fontSize: 20 }} />}>Análisis de costos</MenuItem>
+            <MenuItem icon={<AnalyticsOutlinedIcon style={{ fontSize: 20 }} />}onClick={handleAnalisisClick}>Análisis de costos</MenuItem>
           </MenuList>
         </Menu>
         <h2
@@ -135,7 +139,7 @@ export default function HomePage() {
       </Box>
 
       {/* Fondo opaco y formularios */}
-      {(showRegister || showComercializador || showRegisterFactura) && (
+      {(showRegister || showComercializador || showRegisterFactura ) && (
         <>
           <Box
             position="fixed"
