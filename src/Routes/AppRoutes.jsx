@@ -14,6 +14,7 @@ import Tarifas from '../Components/Tarifas';
 import BuscarTarifas from '../Components/BuscarTarifas';
 import Facturas from '../Components/Facturas'
 import BuscarFacturas from '../Components/BuscarFacturas';
+import Graficas from '../Components/Graficas';
 
 const AppRoutes = () => (
   <Routes>
@@ -31,6 +32,7 @@ const AppRoutes = () => (
     <Route path="/registro-comercializador" element={<ComercializadorForm />} />
     <Route path="/facturas" element={<Facturas />} />
     <Route path="/buscar-facturas" element={<BuscarFacturas />} />
+    <Route path="/analisis-costos" element={<Graficas />} />
   </Routes>
 );
 

@@ -130,7 +130,7 @@ const BuscarFacturas = () => {
           <Img src={logoInstitucional} alt="Logo Institucional" boxSize="50px" />
         </Heading>
       </VStack>
-      <Box p={5} backgroundColor="#98fe58" h="36.1rem">
+      <Box p={5} backgroundColor="#3bb000" h="40rem">
         <Box display="flex" justifyContent="space-between" mb={4}>
           <Input 
             backgroundColor={'white'}
@@ -144,14 +144,16 @@ const BuscarFacturas = () => {
         <TableContainer backgroundColor={''}>
           <Table variant='striped' colorScheme='teal'>
             <Thead>
-              <Tr backgroundColor={'#3bb000'}>
+              <Tr backgroundColor={'#52db07'}>
                 <Th color={'white'}>Número Factura</Th>
                 <Th color={'white'}>Fecha</Th>
                 <Th color={'white'}>Sede</Th>
                 <Th color={'white'}>Año Consumo</Th>
                 <Th color={'white'}>Mes Consumo</Th>
-                <Th color={'white'} isNumeric>Cantidad kWh</Th>
-                <Th color={'white'} isNumeric>Valor Factura</Th>
+                <Th color={'white'} isNumeric>
+                  Cantidad <Text as="span" textTransform="lowercase">kWh</Text>
+                </Th>
+                <Th color={'white'} isNumeric>Valor Consumo</Th>
                 <Th color={'white'}></Th>
               </Tr>
             </Thead>
