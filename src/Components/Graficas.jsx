@@ -16,23 +16,18 @@ const Graficas = () => {
   const [selectedOption, setSelectedOption] = useState('tarifas'); // Estado para el select
   const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
-
   const handleHome = async () => {
     navigate('/home');
   }
+
   useEffect(() => {
     const fetchSedes = async () => {
       try {
         const response = await fetch('http://localhost:3001/api/sedes');
-        if (!response.ok) {
-          throw new Error('Error en la respuesta de la API');
-        }
+        if (!response.ok) throw new Error('Error en la respuesta de la API');
         const result = await response.json();
-        if (Array.isArray(result)) {
-          setSedes(result);
-        } else {
-          console.error('Datos de sedes no son un arreglo o respuesta incorrecta:', result);
-        }
+        if (Array.isArray(result)) setSedes(result);
+        else console.error('Datos de sedes no son un arreglo o respuesta incorrecta:', result);
       } catch (error) {
         console.error('Error fetching sedes:', error);
       }
@@ -41,15 +36,10 @@ const Graficas = () => {
     const fetchOperadores = async () => {
       try {
         const response = await fetch('http://localhost:3001/api/operadores');
-        if (!response.ok) {
-          throw new Error('Error en la respuesta de la API');
-        }
+        if (!response.ok) throw new Error('Error en la respuesta de la API');
         const result = await response.json();
-        if (Array.isArray(result)) {
-          setOperadores(result);
-        } else {
-          console.error('Datos de operadores no son un arreglo o respuesta incorrecta:', result);
-        }
+        if (Array.isArray(result)) setOperadores(result);
+        else console.error('Datos de operadores no son un arreglo o respuesta incorrecta:', result);
       } catch (error) {
         console.error('Error fetching operadores:', error);
       }
@@ -58,15 +48,10 @@ const Graficas = () => {
     const fetchTarifas = async () => {
       try {
         const response = await fetch('http://localhost:3001/api/operadores_tarifas');
-        if (!response.ok) {
-          throw new Error('Error en la respuesta de la API');
-        }
+        if (!response.ok) throw new Error('Error en la respuesta de la API');
         const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          setTarifas(result.data);
-        } else {
-          console.error('Datos de tarifas no son un arreglo o respuesta incorrecta:', result);
-        }
+        if (result.success && Array.isArray(result.data)) setTarifas(result.data);
+        else console.error('Datos de tarifas no son un arreglo o respuesta incorrecta:', result);
       } catch (error) {
         console.error('Error fetching tarifas:', error);
       }
@@ -74,13 +59,10 @@ const Graficas = () => {
 
     const fetchFacturas = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/facturas'); // Asume que tienes un endpoint para las facturas
-        if (!response.ok) {
-          throw new Error('Error en la respuesta de la API');
-        }
+        const response = await fetch('http://localhost:3001/api/facturas');
+        if (!response.ok) throw new Error('Error en la respuesta de la API');
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
-          console.log(result.data); // Verifica los datos en la consola
           setFacturas(result.data);
         } else {
           console.error('Datos de facturas no son un arreglo o respuesta incorrecta:', result);
@@ -96,82 +78,82 @@ const Graficas = () => {
     fetchFacturas();
   }, []);
 
-  // Preparar las categorías (meses) y las series (tarifas individuales) para operadores
-  const categories = meses;
-  const seriesOperadores = [];
-  const seriesSedes = [];
-  const seriesFacturas = [];
+  const formatNumber = (value) => {
+    return Intl.NumberFormat().format(value);
+  };
 
-  // Crear un mapa para almacenar las tarifas por operador y sede
   const tarifasPorOperador = {};
   const tarifasPorSede = {};
   const facturasPorSedeYMes = {};
+  const facturasPorOperador = {};
 
-  // Inicializar los mapas
   tarifas.forEach(tarifa => {
     const mes = meses[tarifa.mes - 1];
     const operador = operadores.find(o => o.idoperador === tarifa.idoperador)?.nombre || `Operador ${tarifa.idoperador}`;
     const sede = sedes.find(s => s.idsede === tarifa.idsede)?.nombre || `Sede ${tarifa.idsede}`;
 
-    // Inicializar arrays para operadores
     if (!tarifasPorOperador[operador]) {
       tarifasPorOperador[operador] = Array(meses.length).fill(0);
     }
     tarifasPorOperador[operador][meses.indexOf(mes)] = tarifa.valorkh;
 
-    // Inicializar arrays para sedes
     if (!tarifasPorSede[sede]) {
       tarifasPorSede[sede] = Array(meses.length).fill(0);
     }
     tarifasPorSede[sede][meses.indexOf(mes)] = tarifa.valorkh;
   });
 
-  // Inicializar facturas por sede y mes
   facturas.forEach(factura => {
     const mes = meses[factura.mes - 1];
+    const operador = operadores.find(o => o.idoperador === factura.idoperador)?.nombre || `Operador ${factura.idoperador}`;
     const sede = sedes.find(s => s.idsede === factura.sede)?.nombre || `Sede ${factura.sede}`;
-    if (!facturasPorSedeYMes[sede]) {
-      facturasPorSedeYMes[sede] = Array(meses.length).fill(0);
+    const clave = `${operador} - ${sede}`;
+    const clave2=`${sede} - ${operador}`;
+
+    if (!facturasPorOperador[clave]) {
+      facturasPorOperador[clave] = Array(meses.length).fill(0);
     }
-    facturasPorSedeYMes[sede][meses.indexOf(mes)] = factura.valor_factura; // Asegúrate de usar 'valor_factura'
+    facturasPorOperador[clave][meses.indexOf(mes)] += factura.valor_factura;
+
+    if (!facturasPorSedeYMes[clave2]) {
+      facturasPorSedeYMes[clave2] = Array(meses.length).fill(0);
+    }
+    facturasPorSedeYMes[clave2][meses.indexOf(mes)] = factura.valor_factura;
   });
 
-  // Crear series para cada operador
-  Object.keys(tarifasPorOperador).forEach(operador => {
-    seriesOperadores.push({
-      name: operador,
-      data: tarifasPorOperador[operador]
-    });
-  });
+  const seriesOperadores = Object.keys(tarifasPorOperador).map(operador => ({
+    name: operador,
+    data: tarifasPorOperador[operador]
+  }));
 
-  // Crear series para cada sede
-  Object.keys(tarifasPorSede).forEach(sede => {
-    seriesSedes.push({
-      name: sede,
-      data: tarifasPorSede[sede]
-    });
-  });
+  const seriesSedes = Object.keys(tarifasPorSede).map(sede => ({
+    name: sede,
+    data: tarifasPorSede[sede]
+  }));
 
-  // Crear series para facturas por sede
-  Object.keys(facturasPorSedeYMes).forEach(sede => {
-    seriesFacturas.push({
-      name: sede,
-      data: facturasPorSedeYMes[sede]
-    });
-  });
+  const seriesFacturas = Object.keys(facturasPorSedeYMes).map(sede => ({
+    name: sede,
+    data: facturasPorSedeYMes[sede]
+  }));
+
+  // Crear la serie para las facturas por operador
+  const seriesFacturasOperador = Object.keys(facturasPorOperador).map(operador => ({
+    name: operador,
+    data: facturasPorOperador[operador]
+  }));
 
   const tarifasOptionsOperadores = {
     chart: { id: "tarifas-chart-operadores" },
-    xaxis: { categories: categories },
+    xaxis: { categories: meses },
     title: { text: 'Valor de tarifas por mes y operador', align: 'center' },
     yaxis: {
       labels: {
-        formatter: (value) => value.toFixed(2) // Mostrar solo dos decimales en el eje Y
+        formatter: (value) => formatNumber(value) // Mostrar en miles
       }
     },
     tooltip: {
       y: {
-        formatter: (value) => `${value.toFixed(2)} kWh` // Tooltip con dos decimales
+        formatter: (value) => `${formatNumber(value)} kWh` // Tooltip en miles
       }
     },
     plotOptions: {
@@ -186,16 +168,16 @@ const Graficas = () => {
 
   const tarifasOptionsSedes = {
     chart: { id: "tarifas-chart-sedes" },
-    xaxis: { categories: categories },
+    xaxis: { categories: meses },
     title: { text: 'Valor de tarifas por mes y sede', align: 'center' },
     yaxis: {
       labels: {
-        formatter: (value) => value.toFixed(0) // Mostrar solo dos decimales en el eje Y
+        formatter: (value) => formatNumber(value) // Mostrar en miles
       }
     },
     tooltip: {
       y: {
-        formatter: (value) => `${value.toFixed(2)} kWh` // Tooltip con dos decimales
+        formatter: (value) => `${formatNumber(value)} kWh` // Tooltip en miles
       }
     },
     plotOptions: {
@@ -210,18 +192,46 @@ const Graficas = () => {
     }
   };
 
-  const facturasOptions = {
-    chart: { id: "facturas-chart" },
-    xaxis: { categories: categories },
-    title: { text: 'Valor de facturas por mes y sede', align: 'center' },
+  const facturasOptionsLinea = {
+    chart: { id: "facturas-chart-linea", type: 'line' },
+    xaxis: { categories: meses },
+    title: { text: 'Valor de Facturas en Linea', align: 'center' },
     yaxis: {
       labels: {
-        formatter: (value) => value.toFixed(0) // Mostrar solo dos decimales en el eje Y
-      }
+        formatter: (value) => formatNumber(value) // Mostrar en miles
+      },
+      min: 1000000,
+      max: 18000000
     },
     tooltip: {
       y: {
-        formatter: (value) => `${value}$` // Tooltip con dos decimales
+        formatter: (value) => `${formatNumber(value)}$` // Tooltip en miles
+      }
+    },
+    plotOptions: {
+      line: {
+        curve: 'smooth' // Suavizar las líneas
+      }
+    },
+    legend: {
+      position: 'top'
+    }
+  };
+
+  const facturasOptionsBarras = {
+    chart: { id: "facturas-chart-barras", type: 'bar' },
+    xaxis: { categories: meses },
+    title: { text: 'Valor de Facturas en Barra', align: 'center' },
+    yaxis: {
+      labels: {
+        formatter: (value) => formatNumber(value) // Mostrar en miles
+      },
+      min: 1000000,
+      max: 18000000
+    },
+    tooltip: {
+      y: {
+        formatter: (value) => `${formatNumber(value)}$` // Tooltip en miles
       }
     },
     plotOptions: {
@@ -255,52 +265,35 @@ const Graficas = () => {
           <Img src={logoInstitucional} alt="Logo Institucional" boxSize="50px" />
         </Heading>
       </VStack>
-      
-      <Box p={5} backgroundColor="#3bb000" h="auto"
-        display={'flex'}
-        flexDirection={'column'}
-        alignItems={'center'}
-        alignContent={'center'}>
-        
-        <Box
-        display={'flex'}
-        justifyContent={'revert'}
-        >
-        
-        <Select 
-          backgroundColor={'white'}
-          value={selectedOption} 
-          onChange={(e) => setSelectedOption(e.target.value)} 
-          mb={4}
-          w="200px"
-          left={'4rem'}
-          
-        >
-          <option value="tarifas">Tarifas</option>
-          <option value="facturas">Facturas</option>
-        </Select>
-        <Button 
+
+      <Box p={5} backgroundColor="#3bb000" h="auto" display={'flex'} flexDirection={'column'} alignItems={'center'}>
+        <Box display={'flex'} justifyContent={'revert'}>
+          <Select 
+            backgroundColor={'white'}
+            value={selectedOption} 
+            onChange={(e) => setSelectedOption(e.target.value)} 
+            mb={4}
+            w="200px"
+            left={'4rem'}
+          >
+            <option value="tarifas">Tarifas</option>
+            <option value="facturas">Facturas</option>
+          </Select>
+          <Button 
             left={'30rem'}
-
-           w='8rem' 
-           color='white' 
-           backgroundColor='#C8102E'
-           _hover={{backgroundColor:'#960000'}}
-           _active={{ backgroundColor: '#6d0000' }}
-           
-           onClick={handleHome}
-           >
+            w='8rem' 
+            color='white' 
+            backgroundColor='#C8102E'
+            _hover={{backgroundColor:'#960000'}}
+            _active={{ backgroundColor: '#6d0000' }}
+            onClick={handleHome}
+          >
             Regresar
-           </Button>
+          </Button>
         </Box>
-        
-        
 
-
-        {/* Renderizar gráficos basados en la selección */}
         {selectedOption === 'tarifas' && (
           <>
-            {/* Gráfico de tarifas individuales por mes y operador */}
             <Box p={5} backgroundColor="#ecf1f2" w={'80%'}>
               <Chart
                 options={tarifasOptionsOperadores}
@@ -310,8 +303,6 @@ const Graficas = () => {
                 height="400"
               />
             </Box>
-
-            {/* Gráfico de tarifas individuales por mes y sede */}
             <Box p={5} backgroundColor="#ecf1f2" w={'80%'}>
               <Chart
                 options={tarifasOptionsSedes}
@@ -327,11 +318,16 @@ const Graficas = () => {
         {selectedOption === 'facturas' && (
           <Box p={5} backgroundColor="#ecf1f2" w={'80%'}>
             <Chart
-              options={facturasOptions}
+              options={facturasOptionsLinea}
+              series={seriesFacturasOperador} // Usar la serie correcta aquí
+              type="line"
+              height={400}
+            />
+            <Chart
+              options={facturasOptionsBarras}
               series={seriesFacturas}
               type="bar"
-              width="100%"
-              height="400"
+              height={400}
             />
           </Box>
         )}

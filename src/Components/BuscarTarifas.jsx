@@ -15,8 +15,10 @@ import {
   TableCaption,
   TableContainer,
 } from '@chakra-ui/react'
+import { useNavigate } from 'react-router-dom';
 
 const BuscarTarifas = () => {
+  const navigate = useNavigate();
   const [tarifasRegistradas, setTarifasRegistradas] = useState([]);
   const [filteredTarifas, setFilteredTarifas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,6 +28,9 @@ const BuscarTarifas = () => {
   const [selectedTarifa, setSelectedTarifa] = useState(null);
   const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
+  const handleHome = async () => {
+    navigate('/home');
+  }
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -130,6 +135,7 @@ const BuscarTarifas = () => {
         </Heading>
       </VStack>
       <Box p={5} backgroundColor="#3bb000" h="auto">
+        
         <Box display="flex" justifyContent="space-between" mb={4}>
           <Input
             backgroundColor={'white'}
@@ -138,7 +144,27 @@ const BuscarTarifas = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <Button marginLeft={'1rem'} color={'white'} backgroundColor='#007832' _hover={{ backgroundColor: '#02652d' }} _active={{ backgroundColor: '#003916' }} onClick={() => { setSelectedTarifa(null); onOpen(); }}>Nuevo</Button>
+          <Button 
+          marginLeft={'0.2rem'} 
+          color={'white'} 
+          backgroundColor='#007832' 
+          _hover={{ backgroundColor: '#02652d' }} 
+          _active={{ backgroundColor: '#003916' }} 
+          onClick={() => { setSelectedTarifa(null); onOpen(); }}>
+            Nuevo
+          </Button>
+          <Button 
+            left={'0.1rem'}
+            w='7rem' 
+            color='white' 
+            backgroundColor='#C8102E'
+            _hover={{backgroundColor:'#960000'}}
+            _active={{ backgroundColor: '#6d0000' }}
+            onClick={handleHome}
+          >
+            Regresar
+          </Button>
+          
         </Box>
         <TableContainer backgroundColor={''}>
           <Table variant='striped' colorScheme='teal'>
