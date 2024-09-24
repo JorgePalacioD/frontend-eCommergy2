@@ -39,6 +39,7 @@ const Facturas = ({ factura, onClose }) => {
       .then(response => response.json())
       .then(data => setOperadores(data))
       .catch(error => {
+        onClose();
         console.error('Error fetching operadores:', error);
         Swal.fire('Error', 'Hubo un problema al obtener los operadores.', 'error');
       });
@@ -49,6 +50,7 @@ const Facturas = ({ factura, onClose }) => {
       .then(response => response.json())
       .then(data => setSedes(data))
       .catch(error => {
+        onClose();
         console.error('Error fetching sedes:', error);
         Swal.fire('Error', 'Hubo un problema al obtener las sedes.', 'error');
       });
@@ -65,6 +67,7 @@ const Facturas = ({ factura, onClose }) => {
           const result = await response.json();
           setValoresKH(result.data); // Ajusta esto según la estructura de tu respuesta esperada
         } catch (error) {
+          onClose();
           console.error('Error fetching valores kWh:', error.message);
           Swal.fire('Error', 'Hubo un problema al obtener los valores de kWh. Verifique la consola para más detalles.', 'error');
         }
@@ -76,23 +79,25 @@ const Facturas = ({ factura, onClose }) => {
   const handleGuardarFactura = () => {
     console.log('Operador Seleccionado:', operadorSeleccionado);
     console.log('Número de Factura:', numeroFactura);
+    
     // Validación de campos antes de guardar
     if (!numeroFactura || !operadorSeleccionado || !sedeSeleccionada || !anio || !mes || !cantidadKH || !valorKHSeleccionado || !valorFactura) {
+      onClose();
       Swal.fire('Error', 'Todos los campos son obligatorios.', 'error');
       return;
     }
-
+  
     if (!idusuario) {
+      onClose();
       Swal.fire('Error', 'No se encontró el usuario. Por favor, inicie sesión nuevamente.', 'error');
       return;
     }
-
-
+  
     const data = {
       numerofac: numeroFactura,
       idoperador: parseInt(operadorSeleccionado, 10), // Convertir a entero
       sede: parseInt(sedeSeleccionada, 10), // Convertir a entero
-      fecha: fecha.toISOString().split('T')[0], // Formato: YYYY-MM-DD HH:MM:SS
+      fecha: fecha.toISOString().split('T')[0], // Formato: YYYY-MM-DD
       anio: parseInt(anio, 10), // Convertir a entero
       mes: parseInt(mes, 10), // Convertir a entero
       cantidadkh: parseFloat(cantidadKH), // Convertir a float
@@ -100,27 +105,33 @@ const Facturas = ({ factura, onClose }) => {
       valor_factura: parseFloat(valorFactura), // Convertir a float
       idusuario: parseInt(idusuario, 10) // Convertir a entero
     };
-
-      console.log("Datos enviados:", data);
-
-      fetch('http://localhost:3001/api/facturas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(result => {
-        console.log("Resultado de la solicitud:", result);
-        Swal.fire('Éxito', 'Factura guardada correctamente', 'success');
-        onClose(); // Cerrar el modal o el componente
-      })
-      .catch(error => {
-        console.error('Error guardando la factura:', error);
-        Swal.fire('Error', 'Hubo un problema al guardar la factura', 'error');
-      });
+  
+    console.log("Datos enviados:", data);
+  
+    // Aquí se cambia el endpoint para que use numerofac en vez de id
+    const url = factura ? `http://localhost:3001/api/facturas/numerofac/${numeroFactura}` : 'http://localhost:3001/api/facturas';
+    const method = factura ? 'PUT' : 'POST';  // Si factura existe, hacemos PUT, de lo contrario, POST.
+  
+    fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      onClose();
+      console.log("Resultado de la solicitud:", result);
+      Swal.fire('Éxito', factura ? 'Factura actualizada correctamente' : 'Factura guardada correctamente', 'success');
+    })
+    .catch(error => {
+      onClose();
+      console.error('Error guardando la factura:', error);
+      Swal.fire('Error', 'Hubo un problema al guardar la factura', 'error');
+    });
   };
+  
 
   return (
     <Box>

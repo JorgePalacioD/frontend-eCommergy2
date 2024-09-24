@@ -16,8 +16,10 @@ import {
   TableContainer,
 } from '@chakra-ui/react'
 import Facturas from './Facturas';
+import { useNavigate } from 'react-router-dom';
 
 const BuscarFacturas = () => {
+  const navigate = useNavigate();
   const [facturasRegistradas, setFacturasRegistradas] = useState([]);
   const [filteredFacturas, setFilteredFacturas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,6 +28,9 @@ const BuscarFacturas = () => {
   const [selectedFactura, setSelectedFactura] = useState(null);
   const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
+  const handleHome = async () => {
+    navigate('/home');
+  }
   useEffect(() => {
     const fetchSedes = async () => {
       try {
@@ -139,7 +144,26 @@ const BuscarFacturas = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <Button marginLeft={'1rem'} color={'white'} backgroundColor='#007832' _hover={{backgroundColor:'#02652d'}} _active={{ backgroundColor: '#003916' }} onClick={() => { setSelectedFactura(null); onOpen(); }}>Nuevo</Button>
+          <Button 
+          marginLeft={'0.3rem'} 
+          color={'white'} 
+          backgroundColor='#007832' 
+          _hover={{backgroundColor:'#02652d'}} 
+          _active={{ backgroundColor: '#003916' }} 
+          onClick={() => { setSelectedFactura(null); onOpen(); }}>
+            Nuevo
+          </Button>
+          <Button 
+            left={'0.1rem'}
+            w='7rem' 
+            color='white' 
+            backgroundColor='#C8102E'
+            _hover={{backgroundColor:'#960000'}}
+            _active={{ backgroundColor: '#6d0000' }}
+            onClick={handleHome}
+          >
+            Regresar
+          </Button>
         </Box>
         <TableContainer backgroundColor={''}>
           <Table variant='striped' colorScheme='teal'>
