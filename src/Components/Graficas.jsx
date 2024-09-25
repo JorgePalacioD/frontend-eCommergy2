@@ -14,13 +14,15 @@ const Graficas = () => {
   const [sedes, setSedes] = useState([]);
   const [operadores, setOperadores] = useState([]);
   const [selectedOption, setSelectedOption] = useState('tarifas'); // Estado para el select
+  const [selectedOptionAnio, setSelectedOptionAnio] = useState(new Date().getFullYear()); // Estado para el select de año
   const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const anios = Array.from({ length: 2 }, (_, i) => new Date().getFullYear() - i); // 2 años hacia atrás
 
   const handleHome = async () => {
     navigate('/home');
   }
-
   useEffect(() => {
+    
     const fetchSedes = async () => {
       try {
         const response = await fetch('http://localhost:3001/api/sedes');
@@ -59,24 +61,31 @@ const Graficas = () => {
 
     const fetchFacturas = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/facturas');
-        if (!response.ok) throw new Error('Error en la respuesta de la API');
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          setFacturas(result.data);
-        } else {
-          console.error('Datos de facturas no son un arreglo o respuesta incorrecta:', result);
-        }
+          console.log("Fetching facturas for year:", selectedOptionAnio); // Para verificar el año
+          const response = await fetch(`http://localhost:3001/api/facturas/anio/${selectedOptionAnio}`);
+          
+          if (!response.ok) throw new Error('Error en la respuesta de la API');
+  
+          const result = await response.json();
+  
+          // Verificar si el resultado es un arreglo
+          if (Array.isArray(result)) {
+              console.log("Facturas obtenidas:", result); // Para ver qué datos llegan
+              setFacturas(result);
+          } else {
+              console.error('Datos de facturas no son un arreglo o respuesta incorrecta:', result);
+          }
       } catch (error) {
-        console.error('Error fetching facturas:', error);
+          console.error('Error fetching facturas:', error);
       }
-    };
+  };
+  
 
     fetchSedes();
     fetchOperadores();
     fetchTarifas();
     fetchFacturas();
-  }, []);
+  }, [selectedOptionAnio]);
 
   const formatNumber = (value) => {
     return Intl.NumberFormat().format(value);
@@ -316,7 +325,20 @@ const Graficas = () => {
         )}
 
         {selectedOption === 'facturas' && (
+          
           <Box p={5} backgroundColor="#ecf1f2" w={'80%'}>
+            <Select 
+              backgroundColor={'white'}
+              value={selectedOptionAnio} 
+              onChange={(e) => setSelectedOptionAnio(e.target.value)} 
+              mb={4}
+              w="200px"
+              left={'4rem'}
+            >
+              {anios.map((anio) => (
+                <option key={anio} value={anio}>{anio}</option>
+              ))}
+            </Select>
             <Chart
               options={facturasOptionsLinea}
               series={seriesFacturasOperador} // Usar la serie correcta aquí
