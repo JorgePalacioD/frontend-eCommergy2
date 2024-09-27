@@ -80,9 +80,14 @@ const BuscarTarifas = () => {
     const filtered = tarifasRegistradas.filter(tarifa =>
       tarifa.nombreOperador && tarifa.nombreOperador.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    console.log("Tarifas filtradas:", filtered);
-    setFilteredTarifas(filtered);
+  
+    // Ordenar las tarifas filtradas por mes
+    const sortedFiltered = filtered.sort((a, b) => a.mes - b.mes);
+    
+    console.log("Tarifas filtradas y ordenadas:", sortedFiltered);
+    setFilteredTarifas(sortedFiltered);
   }, [searchTerm, tarifasRegistradas]);
+  
 
   const handleEdit = (tarifa) => {
     setSelectedTarifa(tarifa);
@@ -207,6 +212,7 @@ const BuscarTarifas = () => {
                         _hover={{ backgroundColor: '#960000' }}
                         _active={{ backgroundColor: '#6d0000' }}
                         onClick={() => handleDelete(tarifa)}
+                        marginLeft={'0.8rem'}
                       >
                         Eliminar
                       </Button>

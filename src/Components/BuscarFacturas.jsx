@@ -83,7 +83,7 @@ const BuscarFacturas = () => {
   useEffect(() => {
     const filtered = facturasRegistradas.filter(factura => {
       const sedeNombre = sedes.find(sede => sede.idsede === factura.sede)?.nombre.toLowerCase() || '';
-
+  
       return (
         (factura.numeroFactura && factura.numeroFactura.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (sedeNombre && sedeNombre.includes(searchTerm.toLowerCase())) ||
@@ -92,8 +92,13 @@ const BuscarFacturas = () => {
         (factura.valorFactura && factura.valorFactura.toString().includes(searchTerm))
       );
     });
-    setFilteredFacturas(filtered);
+  
+    // Ordenar las facturas filtradas por mes
+    const sortedFiltered = filtered.sort((a, b) => a.mes - b.mes);
+    
+    setFilteredFacturas(sortedFiltered);
   }, [searchTerm, facturasRegistradas, sedes]);
+  
 
   const handleEdit = (factura) => {
     setSelectedFactura(factura);
@@ -210,7 +215,7 @@ const BuscarFacturas = () => {
                         _hover={{backgroundColor:'#CC0000'}} 
                         _active={{ backgroundColor: '#990000' }} 
                         onClick={() => handleDelete(factura)}
-                        marginLeft={'1rem'}
+                        marginLeft={'0.8rem'}
                       >
                         Borrar
                       </Button>
