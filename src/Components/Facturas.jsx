@@ -58,9 +58,9 @@ const Facturas = ({ factura, onClose }) => {
   
   useEffect(() => {
     const fetchTarifas = async () => {
-      if (operadorSeleccionado && sedeSeleccionada) {
+      if (operadorSeleccionado && sedeSeleccionada && mes) { // Aseguramos que mes esté presente
         try {
-          const response = await fetch(`http://localhost:3001/api/operadores_tarifa/${operadorSeleccionado}/${sedeSeleccionada}`);
+          const response = await fetch(`http://localhost:3001/api/operadores_tarifas/${operadorSeleccionado}/${sedeSeleccionada}/${mes}`); // Incluimos el mes
           if (!response.ok) {
             throw new Error(`Error: ${response.status} - ${response.statusText}`);
           }
@@ -74,7 +74,8 @@ const Facturas = ({ factura, onClose }) => {
       }
     };
     fetchTarifas();
-  }, [operadorSeleccionado, sedeSeleccionada]);
+  }, [operadorSeleccionado, sedeSeleccionada, mes]); // Añadido mes como dependencia
+
 
   const handleGuardarFactura = () => {
     console.log('Operador Seleccionado:', operadorSeleccionado);
@@ -290,3 +291,4 @@ const Facturas = ({ factura, onClose }) => {
 };
 
 export default Facturas;
+
