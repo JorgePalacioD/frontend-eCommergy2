@@ -4,7 +4,14 @@ import Chart from 'react-apexcharts';
 import logoEmpresa from '../assests/logoECommergy2-removebg-preview.png';
 import logoInstitucional from '../assests/logo-sena-verde-complementario-png-2022.png';
 import { useNavigate } from 'react-router-dom';
-
+import {
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  StatGroup,
+} from '@chakra-ui/react'
 
 const Graficas = () => {
   const navigate = useNavigate();
@@ -86,6 +93,38 @@ const Graficas = () => {
     fetchTarifas();
     fetchFacturas();
   }, [selectedOptionAnio]);
+
+  const calculateSumsByOperator = () => {
+    const facturasPorOperadorDiferencia = {};
+    
+
+    facturas.forEach(factura => {
+      const operador = operadores.find(o => o.idoperador === factura.idoperador)?.nombre || `Operador ${factura.idoperador}`;
+      const sede = sedes.find(s => s.idsede === factura.sede)?.nombre || `Sede ${factura.sede}`;
+      const clave = `${operador} - ${sede}`;
+      if (!facturasPorOperadorDiferencia[clave]) {
+        facturasPorOperadorDiferencia[clave] = 0;
+      }
+      facturasPorOperadorDiferencia[clave] += factura.valor_factura;
+    });
+
+    return facturasPorOperadorDiferencia;
+  };
+
+  const facturasPorOperadorDiferencia = calculateSumsByOperator();
+
+  // Suponiendo que deseas comparar dos operadores específicos:
+  const operador1 = 'EDEQ Grupo EPM - Comercio y Servicio'; // Nombre del primer operador
+  const operador2 = 'NEU Energy - Comercio y Servicio'; // Nombre del segundo operador
+  const valorOperador1 = facturasPorOperadorDiferencia[operador1] || 0;
+  const valorOperador2 = facturasPorOperadorDiferencia[operador2] || 0;
+  const diferencia = valorOperador1 - valorOperador2;
+
+  const operador3 = 'EDEQ Grupo EPM - Turismo y Gastronomia'; // Nombre del primer operador
+  const operador4 = 'NEU Energy - Turismo y Gastronomia'; // Nombre del segundo operador
+  const valorOperador3 = facturasPorOperadorDiferencia[operador3] || 0;
+  const valorOperador4 = facturasPorOperadorDiferencia[operador4] || 0;
+  const diferencia2 = valorOperador3 - valorOperador4;
 
   const formatNumber = (value) => {
     return Intl.NumberFormat().format(value);
@@ -210,7 +249,7 @@ const Graficas = () => {
         formatter: (value) => formatNumber(value) // Mostrar en miles
       },
       min: 1000000,
-      max: 18000000
+      max: 20000000
     },
     tooltip: {
       y: {
@@ -236,7 +275,7 @@ const Graficas = () => {
         formatter: (value) => formatNumber(value) // Mostrar en miles
       },
       min: 1000000,
-      max: 18000000
+      max: 20000000
     },
     tooltip: {
       y: {
@@ -351,6 +390,75 @@ const Graficas = () => {
               type="bar"
               height={400}
             />
+            <Box >
+              <Box >
+                <Box textAlign={'center'}>
+                <Text fontWeight="bold" fontSize="xl">Facturacion Anual por Comercializador</Text>
+                </Box>
+                      <Box
+                      display={'flex'}
+                      justifyContent={'space-between'}
+                      >
+                          <StatGroup marginBottom={'1rem'}>
+                          {Object.keys(facturasPorOperador).map((operador, index) => {
+                        const totalFacturaSede = facturasPorOperador[operador].reduce((acc, valor) => acc + valor, 0);
+                        return (
+                            <Stat marginLeft={'8rem'} key={index}>
+                              <StatLabel w={'20rem'}>{operador}</StatLabel>
+                              <StatNumber>{formatNumber(totalFacturaSede)} $</StatNumber>
+                            </Stat>
+                            );
+                          })}
+                          </StatGroup>
+                      </Box>
+                  </Box>
+                  <Box textAlign={'center'}>
+                    <Text fontWeight="bold" fontSize="xl">Diferencia entre Comercializadoras</Text>
+                  </Box>
+                  <StatGroup>
+                      <Stat>
+                        <StatLabel>{operador1}</StatLabel>
+                        <StatNumber>{formatNumber(valorOperador1)}$</StatNumber>
+                      </Stat>
+
+                      <Stat>
+                        <StatLabel>{operador2}</StatLabel>
+                        <StatNumber>{formatNumber(valorOperador2)}$</StatNumber>
+                      </Stat>
+
+                      <Stat>
+                        <StatLabel>Diferencia</StatLabel>
+                        <StatNumber >
+                          {formatNumber(Math.abs(diferencia))}$
+                        </StatNumber>
+                        <StatHelpText>
+                        {valorOperador1 >= valorOperador2 ? "Ahorro en "+operador2 : "Ahorro en" +operador1}
+                        </StatHelpText>
+                      </Stat>
+                  </StatGroup>
+                  <StatGroup>
+                      <Stat>
+                        <StatLabel>{operador3}</StatLabel>
+                        <StatNumber>{formatNumber(valorOperador3)}$</StatNumber>
+                      </Stat>
+
+                      <Stat>
+                        <StatLabel>{operador4}</StatLabel>
+                        <StatNumber>{formatNumber(valorOperador4)}$</StatNumber>
+                      </Stat>
+
+                      <Stat>
+                        <StatLabel>Diferencia</StatLabel>
+                        <StatNumber >
+                          {formatNumber(Math.abs(diferencia2))}$
+                        </StatNumber>
+                        <StatHelpText>
+                          {valorOperador3 >= valorOperador4 ? "Ahorro en "+operador4  : "Ahorro en" +operador3}
+                        </StatHelpText>
+                      </Stat>
+                  </StatGroup>
+              
+            </Box>
           </Box>
         )}
       </Box>
