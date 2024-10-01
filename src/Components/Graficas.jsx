@@ -13,6 +13,7 @@ import {
   StatGroup,
 } from '@chakra-ui/react'
 
+
 const Graficas = () => {
   const navigate = useNavigate();
 
