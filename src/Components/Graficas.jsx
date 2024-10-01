@@ -140,16 +140,17 @@ const Graficas = () => {
     const mes = meses[tarifa.mes - 1];
     const operador = operadores.find(o => o.idoperador === tarifa.idoperador)?.nombre || `Operador ${tarifa.idoperador}`;
     const sede = sedes.find(s => s.idsede === tarifa.idsede)?.nombre || `Sede ${tarifa.idsede}`;
+    const clave = `${operador} - ${sede}`;
 
-    if (!tarifasPorOperador[operador]) {
-      tarifasPorOperador[operador] = Array(meses.length).fill(0);
+    if (!tarifasPorOperador[clave]) {
+      tarifasPorOperador[clave] = Array(meses.length).fill(0);
     }
-    tarifasPorOperador[operador][meses.indexOf(mes)] = tarifa.valorkh;
+    tarifasPorOperador[clave][meses.indexOf(mes)] = tarifa.valorkh;
 
-    if (!tarifasPorSede[sede]) {
-      tarifasPorSede[sede] = Array(meses.length).fill(0);
+    if (!tarifasPorSede[clave]) {
+      tarifasPorSede[clave] = Array(meses.length).fill(0);
     }
-    tarifasPorSede[sede][meses.indexOf(mes)] = tarifa.valorkh;
+    tarifasPorSede[clave][meses.indexOf(mes)] = tarifa.valorkh;
   });
 
   facturas.forEach(factura => {
@@ -157,17 +158,16 @@ const Graficas = () => {
     const operador = operadores.find(o => o.idoperador === factura.idoperador)?.nombre || `Operador ${factura.idoperador}`;
     const sede = sedes.find(s => s.idsede === factura.sede)?.nombre || `Sede ${factura.sede}`;
     const clave = `${operador} - ${sede}`;
-    const clave2=`${sede} - ${operador}`;
 
     if (!facturasPorOperador[clave]) {
       facturasPorOperador[clave] = Array(meses.length).fill(0);
     }
     facturasPorOperador[clave][meses.indexOf(mes)] += factura.valor_factura;
 
-    if (!facturasPorSedeYMes[clave2]) {
-      facturasPorSedeYMes[clave2] = Array(meses.length).fill(0);
+    if (!facturasPorSedeYMes[clave]) {
+      facturasPorSedeYMes[clave] = Array(meses.length).fill(0);
     }
-    facturasPorSedeYMes[clave2][meses.indexOf(mes)] = factura.valor_factura;
+    facturasPorSedeYMes[clave][meses.indexOf(mes)] = factura.valor_factura;
   });
 
   const seriesOperadores = Object.keys(tarifasPorOperador).map(operador => ({
@@ -194,11 +194,12 @@ const Graficas = () => {
   const tarifasOptionsOperadores = {
     chart: { id: "tarifas-chart-operadores" },
     xaxis: { categories: meses },
-    title: { text: 'Valor de tarifas por mes y operador', align: 'center' },
+    title: { text: 'Valor de tarifas en lineas', align: 'center' },
     yaxis: {
       labels: {
         formatter: (value) => formatNumber(value) // Mostrar en miles
-      }
+      },
+      max: 1000
     },
     tooltip: {
       y: {
@@ -218,11 +219,13 @@ const Graficas = () => {
   const tarifasOptionsSedes = {
     chart: { id: "tarifas-chart-sedes" },
     xaxis: { categories: meses },
-    title: { text: 'Valor de tarifas por mes y sede', align: 'center' },
+    title: { text: 'Valor de tarifas en barras', align: 'center' },
     yaxis: {
       labels: {
         formatter: (value) => formatNumber(value) // Mostrar en miles
-      }
+      },
+    min: 100,
+    max: 1000
     },
     tooltip: {
       y: {
@@ -238,6 +241,9 @@ const Graficas = () => {
     },
     legend: {
       position: 'top'
+    },
+    dataLabels: {
+      enabled: false
     }
   };
 
