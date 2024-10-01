@@ -16,7 +16,7 @@ import {
   TableContainer,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom';
-
+import Swal from 'sweetalert2';
 const BuscarTarifas = () => {
   const navigate = useNavigate();
   const [tarifasRegistradas, setTarifasRegistradas] = useState([]);
@@ -30,7 +30,8 @@ const BuscarTarifas = () => {
 
   const handleHome = async () => {
     navigate('/home');
-  }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -45,13 +46,8 @@ const BuscarTarifas = () => {
         const sedesData = await sedesResponse.json();
 
         if (tarifasData.success && Array.isArray(tarifasData.data)) {
-          const tarifasConNombres = tarifasData.data.map(tarifa => ({
-            ...tarifa,
-            nombreOperador: getOperadorNombre(tarifa.idoperador),
-            nombreSede: getSedeNombre(tarifa.idsede),
-          }));
-          setTarifasRegistradas(tarifasConNombres);
-          setFilteredTarifas(tarifasConNombres);
+          setTarifasRegistradas(tarifasData.data);
+          setFilteredTarifas(tarifasData.data);
         } else {
           console.error('Datos de tarifas no son un arreglo:', tarifasData);
         }
@@ -76,18 +72,17 @@ const BuscarTarifas = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Término de búsqueda:", searchTerm);
     const filtered = tarifasRegistradas.filter(tarifa =>
-      tarifa.nombreOperador && tarifa.nombreOperador.toLowerCase().includes(searchTerm.toLowerCase())
+      getOperadorNombre(tarifa.idoperador).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getSedeNombre(tarifa.idsede).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tarifa.anio.toString().includes(searchTerm) ||
+      (tarifa.mes && meses[tarifa.mes - 1].toLowerCase().includes(searchTerm.toLowerCase()))
     );
-  
-    // Ordenar las tarifas filtradas por mes
-    const sortedFiltered = filtered.sort((a, b) => a.mes - b.mes);
     
-    console.log("Tarifas filtradas y ordenadas:", sortedFiltered);
+    const sortedFiltered = filtered.sort((a, b) => a.mes - b.mes);
+
     setFilteredTarifas(sortedFiltered);
   }, [searchTerm, tarifasRegistradas]);
-  
 
   const handleEdit = (tarifa) => {
     setSelectedTarifa(tarifa);
@@ -95,8 +90,16 @@ const BuscarTarifas = () => {
   };
 
   const handleDelete = async (tarifa) => {
-    const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar esta tarifa?");
-    if (confirmDelete) {
+    const confirmDelete = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "¿Deseas eliminar esta Tarifa?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+  
+    if (confirmDelete.isConfirmed) {
       try {
         const response = await fetch(`http://localhost:3001/api/operadores_tarifas/${tarifa.idtarifa}`, {
           method: 'DELETE',
@@ -140,22 +143,22 @@ const BuscarTarifas = () => {
         </Heading>
       </VStack>
       <Box p={5} backgroundColor="#3bb000" h="auto">
-        
         <Box display="flex" justifyContent="space-between" mb={4}>
           <Input
             backgroundColor={'white'}
             borderColor='#525252'
-            placeholder="Buscar por nombre del operador..."
+            placeholder="Buscar por nombre del operador, sede, año o mes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <Button 
-          marginLeft={'0.2rem'} 
-          color={'white'} 
-          backgroundColor='#007832' 
-          _hover={{ backgroundColor: '#02652d' }} 
-          _active={{ backgroundColor: '#003916' }} 
-          onClick={() => { setSelectedTarifa(null); onOpen(); }}>
+            marginLeft={'0.2rem'} 
+            color={'white'} 
+            backgroundColor='#007832' 
+            _hover={{ backgroundColor: '#02652d' }} 
+            _active={{ backgroundColor: '#003916' }} 
+            onClick={() => { setSelectedTarifa(null); onOpen(); }}
+          >
             Nuevo
           </Button>
           <Button 
@@ -163,13 +166,12 @@ const BuscarTarifas = () => {
             w='7rem' 
             color='white' 
             backgroundColor='#C8102E'
-            _hover={{backgroundColor:'#960000'}}
+            _hover={{ backgroundColor: '#960000' }}
             _active={{ backgroundColor: '#6d0000' }}
             onClick={handleHome}
           >
             Regresar
           </Button>
-          
         </Box>
         <TableContainer backgroundColor={''}>
           <Table variant='striped' colorScheme='teal'>
@@ -233,7 +235,7 @@ const BuscarTarifas = () => {
             <ModalHeader>{selectedTarifa ? 'Editar Tarifa' : 'Nueva Tarifa'}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <Tarifas tarifa={selectedTarifa} onClose={onClose} />
+            <Tarifas tarifa={selectedTarifa} onClose={onClose} />
             </ModalBody>
           </ModalContent>
         </Modal>

@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react'
 import Facturas from './Facturas';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const BuscarFacturas = () => {
   const navigate = useNavigate();
@@ -106,19 +107,32 @@ const BuscarFacturas = () => {
   };
 
   const handleDelete = async (factura) => {
-    const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar esta factura?");
-    if (confirmDelete) {
+    // Preguntar confirmación de eliminación con Swal.fire
+    const confirmDelete = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "¿Deseas eliminar esta factura?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+  
+    if (confirmDelete.isConfirmed) {
       try {
         const response = await fetch(`http://localhost:3001/api/facturas/${factura.idfactura}`, {
           method: 'DELETE',
         });
+  
         if (response.ok) {
+          // Mostrar mensaje de éxito
           Swal.fire('Eliminado!', 'La factura ha sido eliminada.', 'success');
           setFacturasRegistradas(facturasRegistradas.filter(f => f.idfactura !== factura.idfactura));
         } else {
+          // Mostrar mensaje de error
           Swal.fire('Error', 'No se pudo eliminar la factura.', 'error');
         }
       } catch (error) {
+        // Mostrar mensaje de error en caso de excepción
         Swal.fire('Error', 'Ocurrió un error al eliminar la factura: ' + error.message, 'error');
       }
     }
@@ -140,7 +154,7 @@ const BuscarFacturas = () => {
           <Img src={logoInstitucional} alt="Logo Institucional" boxSize="50px" />
         </Heading>
       </VStack>
-      <Box p={5} backgroundColor="#3bb000" h="40rem">
+      <Box p={5} backgroundColor="#3bb000" h="full">
         <Box display="flex" justifyContent="space-between" mb={4}>
           <Input 
             backgroundColor={'white'}

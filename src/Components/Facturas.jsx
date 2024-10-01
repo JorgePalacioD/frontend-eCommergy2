@@ -77,7 +77,7 @@ const Facturas = ({ factura, onClose }) => {
   }, [operadorSeleccionado, sedeSeleccionada, mes]); // Añadido mes como dependencia
 
 
-  const handleGuardarFactura = () => {
+  const handleGuardarFactura = async () => {
     console.log('Operador Seleccionado:', operadorSeleccionado);
     console.log('Número de Factura:', numeroFactura);
     
@@ -120,11 +120,22 @@ const Facturas = ({ factura, onClose }) => {
       },
       body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => response.json())  
     .then(result => {
       onClose();
       console.log("Resultado de la solicitud:", result);
-      Swal.fire('Éxito', factura ? 'Factura actualizada correctamente' : 'Factura guardada correctamente', 'success');
+      Swal.fire({
+        title: 'Éxito',
+        text: factura ? 'Factura actualizada correctamente' : 'Factura guardada correctamente',
+        icon: 'success',
+        showCancelButton: false,
+        showConfirmButton: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Recargar la página después de que el usuario confirme
+          window.location.reload();
+        }
+      });
     })
     .catch(error => {
       onClose();
@@ -140,7 +151,7 @@ const Facturas = ({ factura, onClose }) => {
         <Grid templateColumns="repeat(2, 1fr)" gap={6}>
           {/* Selección de Operador */}
           <FormControl isRequired>
-            <FormLabel>Operador de Energía</FormLabel>
+            <FormLabel>Comercializador</FormLabel>
             <Select
               backgroundColor={'white'}
               borderColor='#525252'
