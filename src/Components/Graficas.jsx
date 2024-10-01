@@ -11,6 +11,7 @@ import {
   StatHelpText,
   StatArrow,
   StatGroup,
+  Text
 } from '@chakra-ui/react'
 
 
