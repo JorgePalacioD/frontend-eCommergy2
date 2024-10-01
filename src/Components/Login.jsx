@@ -160,6 +160,8 @@ export default function Login() {
                   rounded='none' 
                   variant='filled' 
                   value={email} 
+                  borderColor={'black'}
+                  borderRadius={'0.3rem'}
                   onChange={(e) => setEmail(e.target.value)} 
                 />
               </FormControl>
@@ -170,20 +172,20 @@ export default function Login() {
                   variant='filled' 
                   type='password' 
                   value={password} 
+                  borderColor={'black'}
+                  borderRadius={'0.3rem'}
                   onChange={(e) => setPassword(e.target.value)} 
+
                 />
               </FormControl>
               <HStack w='full' justify='space-between'>
-                <Checkbox>Recuérdame.</Checkbox>
-                <Button variant='link' colorScheme='blue'>
-                  ¿Olvidaste tu contraseña?
-                </Button>
               </HStack>
               <Button 
                 rounded='none' 
                 backgroundColor='#007832' 
                 w='full' 
                 color='white' 
+                borderRadius={'0.3rem'}
                 _hover={{ backgroundColor: '#02652d' }}
                 _active={{ backgroundColor: '#003916' }} 
                 onClick={handleLogin}
@@ -216,3 +218,4 @@ export default function Login() {
     </Box>
   );
 }
+
